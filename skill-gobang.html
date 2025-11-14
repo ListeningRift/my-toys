@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能五子棋</title>
+    <link rel="stylesheet" href="gobang/gobang-style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>技能五子棋</h1>
+        <div class="game-info">
+            <div class="player-info">
+                <span class="current-player">当前玩家: <span id="current-player">黑方</span></span>
+            </div>
+            <button id="restart-btn">重新开始</button>
+        </div>
+        <div class="game-container">
+            <div class="skills-panel" id="player1-skills">
+                <h3>黑方技能</h3>
+                <div class="skill-list"></div>
+            </div>
+            <canvas id="board" width="750" height="750"></canvas>
+            <div class="skills-panel" id="player2-skills">
+                <h3>白方技能</h3>
+                <div class="skill-list"></div>
+            </div>
+        </div>
+        <div class="message" id="message"></div>
+    </div>
+
+    <script src="gobang/gobang-player.js"></script>
+    <script src="gobang/gobang-board.js"></script>
+    <script src="gobang/gobang-game.js"></script>
+    <script src="gobang/gobang-main.js"></script>
+</body>
+</html>
