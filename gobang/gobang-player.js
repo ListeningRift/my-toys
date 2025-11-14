@@ -298,3 +298,40 @@ class MultiMoveSkill extends Skill {
         return { success: true, message: `${player.name}开启连续下棋模式，5秒内不结束回合` };
     }
 }
+
+// 保洁上门技能
+class CleaningSkill extends Skill {
+    constructor() {
+        super('保洁上门', '随机扫掉一部分棋子');
+        this.cooldown = 0;
+    }
+
+    use(game, player) {
+        const pieces = [];
+        for (let i = 0; i < game.board.size; i++) {
+            for (let j = 0; j < game.board.size; j++) {
+                if (game.board.grid[i][j] > 0) {
+                    pieces.push({ row: i, col: j });
+                }
+            }
+        }
+
+        if (pieces.length === 0) {
+            return { success: false, message: '棋盘上没有棋子' };
+        }
+
+        const removeCount = Math.max(1, Math.floor(pieces.length * (0.3 + Math.random() * 0.3)));
+        const toRemove = [];
+        for (let i = 0; i < removeCount; i++) {
+            const idx = Math.floor(Math.random() * pieces.length);
+            toRemove.push(pieces[idx]);
+            pieces.splice(idx, 1);
+        }
+
+        toRemove.forEach(pos => {
+            game.board.grid[pos.row][pos.col] = 0;
+        });
+
+        return { success: true, message: `保洁上门成功，扫掉了${removeCount}个棋子` };
+    }
+}

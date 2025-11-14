@@ -15,6 +15,7 @@ function init() {
     player1.addSkill(new DestroyBoardSkill());
     player1.addSkill(new RestoreBoardSkill());
     player1.addSkill(new MultiMoveSkill());
+    player1.addSkill(new CleaningSkill());
     player2.addSkill(new UndoSkill());
     player2.addSkill(new RemoveLastSkill());
     player2.addSkill(new FreezeSkill());
@@ -22,6 +23,7 @@ function init() {
     player2.addSkill(new DestroyBoardSkill());
     player2.addSkill(new RestoreBoardSkill());
     player2.addSkill(new MultiMoveSkill());
+    player2.addSkill(new CleaningSkill());
 
     game = new Game(board, player1, player2);
 
@@ -167,7 +169,7 @@ function useSkill(player, skillIndex) {
         return;
     }
 
-    const noPositionSkills = ['悔棋', '飞沙走石', '静如止水', '水滴石穿', '力拔山兮', '东山再起', '调你离山'];
+    const noPositionSkills = ['悔棋', '飞沙走石', '静如止水', '水滴石穿', '力拔山兮', '东山再起', '调你离山', '保洁上门'];
 
     if (noPositionSkills.includes(skill.name)) {
         const result = skill.execute(game, player);
