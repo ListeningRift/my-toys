@@ -11,6 +11,9 @@ class Game {
         this.destroyedBy = null;
         this.multiMovePlayer = null;
         this.multiMoveEndTime = null;
+        this.lastRemovedPiece = null;
+        this.flyingStoneActive = false;
+        this.flyingStoneEndTime = null;
     }
 
     getCurrentPlayer() {
@@ -96,5 +99,8 @@ class Game {
         this.destroyedBy = null;
         this.multiMovePlayer = null;
         this.multiMoveEndTime = null;
+        this.lastRemovedPiece = null;
+        this.flyingStoneActive = false;
+        this.flyingStoneEndTime = null;
     }
 }

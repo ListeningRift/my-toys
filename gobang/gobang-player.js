@@ -132,9 +132,12 @@ class RemoveLastSkill extends Skill {
         for (let i = game.board.size - 1; i >= 0; i--) {
             for (let j = game.board.size - 1; j >= 0; j--) {
                 if (game.board.grid[i][j] === opponent.id) {
-                    this.animateRemovePiece(game, i, j, opponent.id);
+                    game.flyingStoneActive = true;
+                    game.flyingStoneEndTime = Date.now() + 1500;
+                    game.lastRemovedPiece = { row: i, col: j, playerId: opponent.id };
                     game.board.grid[i][j] = 0;
-                    return { success: true, message: '飞沙走石成功，去掉对方最后一个棋子', animated: true };
+                    this.animateRemovePiece(game, i, j, opponent.id);
+                    return { success: true, message: '飞沙走石成功，去掉对方最后一个棋子', animated: true, switchTurn: true };
                 }
             }
         }
@@ -246,10 +249,12 @@ class DestroyBoardSkill extends Skill {
 
         game.boardDestroyed = true;
         game.destroyedBy = player.id;
+        game.isGameOver = true;
+        game.winner = player;
 
         this.showDestroyEffect(game.board.canvas);
 
-        return { success: true, message: `${player.name}摔破棋盘！对方可使用东山再起恢复` };
+        return { success: true, message: `${player.name}摔破棋盘直接获胜！对方可使用东山再起恢复` };
     }
 
     showDestroyEffect(canvas) {
@@ -333,5 +338,134 @@ class CleaningSkill extends Skill {
         });
 
         return { success: true, message: `保洁上门成功，扫掉了${removeCount}个棋子` };
+    }
+}
+
+// 拾金不昧技能
+class ReturnPieceSkill extends Skill {
+    constructor() {
+        super('拾金不昧', '把被飞沙走石扔走的棋子扔回来');
+        this.cooldown = 0;
+    }
+
+    use(game, player) {
+        if (!game.lastRemovedPiece) {
+            return { success: false, message: '没有被飞沙走石扔走的棋子' };
+        }
+
+        const { row, col, playerId } = game.lastRemovedPiece;
+
+        if (game.board.grid[row][col] !== 0) {
+            return { success: false, message: '原位置已有棋子，无法归还' };
+        }
+
+        this.animateReturnPiece(game, row, col, playerId);
+        game.board.grid[row][col] = playerId;
+        game.lastRemovedPiece = null;
+
+        return { success: true, message: '拾金不昧成功，棋子已归还', animated: true };
+    }
+
+    animateReturnPiece(game, row, col, playerId) {
+        const board = game.board;
+        const canvas = board.canvas;
+        const x = board.padding + col * board.cellSize;
+        const y = board.padding + row * board.cellSize;
+        const radius = board.cellSize * 0.4;
+
+        const river = document.createElement('div');
+        river.className = 'shichahai-river';
+        river.textContent = '什刹海';
+        document.body.appendChild(river);
+
+        const piece = document.createElement('div');
+        piece.className = 'flying-piece';
+        piece.style.left = (canvas.offsetLeft + x) + 'px';
+        piece.style.top = (canvas.offsetTop + y) + 'px';
+        piece.style.width = (radius * 2) + 'px';
+        piece.style.height = (radius * 2) + 'px';
+        piece.style.background = playerId === 1 ? 'radial-gradient(circle at 30% 30%, #666, #000)' : 'radial-gradient(circle at 30% 30%, #fff, #ddd)';
+        piece.style.transform = 'translate(calc(50vw - 50%), calc(100vh - 100px)) rotate(720deg) scale(0.5)';
+        piece.style.opacity = '0';
+        document.body.appendChild(piece);
+
+        setTimeout(() => {
+            piece.style.transform = 'translate(0, 0) rotate(0deg) scale(1)';
+            piece.style.opacity = '1';
+        }, 50);
+
+        setTimeout(() => {
+            piece.remove();
+            river.remove();
+        }, 1500);
+    }
+}
+
+// See You Again技能
+class KnockoutSkill extends Skill {
+    constructor() {
+        super('see you again', '打晕对面直接获胜');
+        this.cooldown = 0;
+    }
+
+    use(game, player) {
+        const opponent = game.players.find(p => p.id !== player.id);
+
+        this.showKnockoutEffect(opponent.id);
+
+        game.isGameOver = true;
+        game.winner = player;
+
+        return { success: true, message: `${player.name}使用see you again打晕了${opponent.name}，直接获胜！`, animated: true };
+    }
+
+    showKnockoutEffect(opponentId) {
+        const panelId = `player${opponentId}-skills`;
+        const panel = document.getElementById(panelId);
+
+        if (panel) {
+            panel.classList.add('knockout');
+
+            setTimeout(() => {
+                panel.classList.remove('knockout');
+            }, 1000);
+        }
+    }
+}
+
+// 擒拿技能
+class CaptureSkill extends Skill {
+    constructor() {
+        super('擒拿', '在飞沙走石期间阻止棋子被扔走');
+        this.cooldown = 0;
+    }
+
+    use(game, player) {
+        if (!game.flyingStoneActive) {
+            return { success: false, message: '当前没有飞沙走石进行中' };
+        }
+
+        if (Date.now() > game.flyingStoneEndTime) {
+            game.flyingStoneActive = false;
+            game.flyingStoneEndTime = null;
+            return { success: false, message: '飞沙走石已结束' };
+        }
+
+        if (!game.lastRemovedPiece) {
+            return { success: false, message: '没有棋子被扔走' };
+        }
+
+        const { row, col, playerId } = game.lastRemovedPiece;
+        game.board.grid[row][col] = playerId;
+        game.lastRemovedPiece = null;
+        game.flyingStoneActive = false;
+        game.flyingStoneEndTime = null;
+
+        const flyingPieces = document.querySelectorAll('.flying-piece');
+        flyingPieces.forEach(piece => piece.remove());
+        const rivers = document.querySelectorAll('.shichahai-river');
+        rivers.forEach(river => river.remove());
+
+        return { success: true, message: '擒拿成功！阻止了棋子被扔走' };
     }
 }

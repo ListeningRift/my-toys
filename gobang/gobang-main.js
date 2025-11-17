@@ -16,6 +16,9 @@ function init() {
     player1.addSkill(new RestoreBoardSkill());
     player1.addSkill(new MultiMoveSkill());
     player1.addSkill(new CleaningSkill());
+    player1.addSkill(new ReturnPieceSkill());
+    player1.addSkill(new CaptureSkill());
+    player1.addSkill(new KnockoutSkill());
     player2.addSkill(new UndoSkill());
     player2.addSkill(new RemoveLastSkill());
     player2.addSkill(new FreezeSkill());
@@ -24,6 +27,9 @@ function init() {
     player2.addSkill(new RestoreBoardSkill());
     player2.addSkill(new MultiMoveSkill());
     player2.addSkill(new CleaningSkill());
+    player2.addSkill(new ReturnPieceSkill());
+    player2.addSkill(new CaptureSkill());
+    player2.addSkill(new KnockoutSkill());
 
     game = new Game(board, player1, player2);
 
@@ -159,6 +165,11 @@ function useSkill(player, skillIndex) {
 
     const skill = player.skills[skillIndex];
 
+    if (game.isGameOver && !game.boardDestroyed) {
+        showMessage('游戏已结束，请重新开始');
+        return;
+    }
+
     if (game.boardDestroyed && skill.name !== '东山再起') {
         showMessage('棋盘已被摔破，只能使用东山再起');
         return;
@@ -169,13 +180,14 @@ function useSkill(player, skillIndex) {
         return;
     }
 
-    const noPositionSkills = ['悔棋', '飞沙走石', '静如止水', '水滴石穿', '力拔山兮', '东山再起', '调你离山', '保洁上门'];
+    const noPositionSkills = ['悔棋', '飞沙走石', '静如止水', '水滴石穿', '力拔山兮', '东山再起', '调你离山', '保洁上门', '拾金不昧', '擒拿', 'see you again'];
 
     if (noPositionSkills.includes(skill.name)) {
         const result = skill.execute(game, player);
         if (result.success) {
             board.draw();
-            if (skill.name !== '调你离山') {
+            const noSwitchSkills = ['调你离山', '擒拿'];
+            if (!noSwitchSkills.includes(skill.name)) {
                 game.switchPlayer();
             }
             renderSkills();
